@@ -4,66 +4,127 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>添加微信客服</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>添加专属客服</title>
     <style>
-        body { 
-            background: #f5f5f7; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh;
+        * {
             margin: 0;
-            font-family: Arial, sans-serif;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            background: #f5f5f7;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
         .card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            max-width: 500px;
             width: 100%;
+            padding: 2rem;
+            text-align: center;
         }
+
+        .header {
+            margin-bottom: 1.5rem;
+        }
+
+        .main-title {
+            color: #1a1a1a;
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        .qr-wrapper {
+            margin: 2rem 0;
+        }
+
         .qr-code {
-            width: 220px;
-            height: 220px;
-            margin: 20px auto;
-            border: 1px solid #eee;
+            width: 100%;
+            max-width: 300px;  /* 二维码最大尺寸 */
+            height: auto;
+            margin: 0 auto;
         }
+
+        .info-group {
+            margin-top: 2rem;
+        }
+
+        .wechat-id {
+            color: #2d2d2d;
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            word-break: break-all;
+        }
+
         .copy-btn {
             background: #07c160;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
+            padding: 0.9rem 2.5rem;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 500;
             cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 1.5rem;
+            }
+            .qr-code {
+                max-width: 280px;
+            }
+            .main-title {
+                font-size: 1.4rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>长按识别二维码添加微信</h2>
-        <img src="./images/wxtp.jpg" class="qr-code" alt="微信二维码">
-        <button class="copy-btn" onclick="copyWechatId()">复制微信号</button>
-        <p style="margin-top:15px;color:#666;">微信号：<span id="wxid">wkdmq258</span></p>
+        <div class="header">
+            <h1 class="main-title">添加专属客服</h1>
+        </div>
+
+        <div class="qr-wrapper">
+            <img src="./images/"wxtp.jpg"
+                 class="qr-code" 
+                 alt="微信二维码"
+                 loading="lazy">
+        </div>
+
+        <div class="info-group">
+            <div class="wechat-id" id="wxid">VX号：wkdmq258</div>
+            <button class="copy-btn" onclick="copyWechatId()">
+                复制微信号
+            </button>
+        </div>
     </div>
 
     <script>
-        // 复制功能
         function copyWechatId() {
-            const text = document.getElementById('wxid').innerText;
+            const text = document.getElementById('wxid').textContent.replace('VX号：', '');
             navigator.clipboard.writeText(text)
-                .then(() => alert('复制成功！'))
+                .then(() => alert('已复制到剪贴板'))
                 .catch(() => prompt('请手动复制：', text));
         }
 
-        // 自动跳转逻辑（可选）
-        setTimeout(() => {
-            if (!navigator.userAgent.includes('MicroMessenger')) {
-                window.location.href = 'weixin://dl/add?username=wkdmq258';
-            }
-        }, 1000);
+        if (!/MicroMessenger/i.test(navigator.userAgent)) {
+            setTimeout(() => {
+                window.location.href = 'weixin://dl/add?username=kf12345';
+            }, 1000);
+        }
     </script>
 </body>
 </html>
