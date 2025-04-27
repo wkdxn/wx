@@ -4,9 +4,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>添加专属客服</title>
     <style>
+        /* ===== 全局重置 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -23,6 +24,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
+        /* ===== 卡片容器 ===== */
         .card {
             background: #ffffff;
             border-radius: 20px;
@@ -33,10 +35,10 @@
             text-align: center;
         }
 
-        /* 二维码容器优化 */
-        .qr-wrapper {
+        /* ===== 二维码区域 ===== */
+        .qr-container {
             margin: 2rem 0;
-            min-height: 300px; /* 预留加载空间 */
+            min-height: 300px; /* 防止内容折叠 */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -46,50 +48,160 @@
             width: 100%;
             max-width: 300px;
             height: auto;
-            object-fit: contain;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        /* 移动端特殊处理 */
+        /* ===== 移动端优化 ===== */
         @media (max-width: 480px) {
+            .card {
+                padding: 1.5rem;
+                border-radius: 16px;
+            }
+            
             .qr-code {
                 max-width: 280px;
             }
-            /* 强制显示调试边框 */
-            .qr-code {
-                border: 1px solid #07c160 !important;
+
+            /* 移动端加载动画 */
+            .qr-code.loaded {
+                animation: qr-appear 0.5s ease-out;
             }
+        }
+
+        @keyframes qr-appear {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* ===== 信息区域 ===== */
+        .info-group {
+            margin-top: 2rem;
+        }
+
+        .wechat-id {
+            color: #2d2d2d;
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: #07c160;
+            color: white;
+            border: none;
+            padding: 0.9rem 2.5rem;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: filter 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            filter: brightness(0.95);
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="qr-wrapper">
+        <h1>添加专属客服</h1>
+        
+        <div class="qr-container">
+            <!-- 强制缓存清除 & 备用CDN方案 -->
             <img src="./images/wxtp.jpg" 
-                 class="qr-code" 
-                 alt="微信二维码"
-                 loading="lazy"
-                 onerror="handleImageError(this)">
-            <div id="error-msg" style="display:none; color:red;">
-                加载失败，请<a href="javascript:location.reload()">刷新页面</a>
+                 class="qr-code"
+                 alt="微信客服二维码"
+                 loading="eager"
+                 onload="this.classList.add('loaded');this.style.opacity=1"
+                 onerror="handleMediaError(this)">
+            <div id="media-error" style="display:none; color:#e55039; margin-top:1rem;">
+                二维码加载失败，请<a href="javascript:location.reload()">点击刷新</a>或直接搜索微信号
             </div>
         </div>
 
-        <script>
-            // 图片错误处理
-            function handleImageError(img) {
-                img.style.display = 'none';
-                document.getElementById('error-msg').style.display = 'block';
-                console.error('图片加载失败:', img.src);
-            }
-
-            // 移动端检测
-            if (/Mobi|Android/i.test(navigator.userAgent)) {
-                document.addEventListener('DOMContentLoaded', function() {
-                    const qrImg = document.querySelector('.qr-code');
-                    console.log('移动端图片尺寸:', qrImg.offsetWidth + 'x' + qrImg.offsetHeight);
-                });
-            }
-        </script>
+        <div class="info-group">
+            <div class="wechat-id">微信号：kf12345</div>
+            <button class="copy-btn" onclick="copyWechatId()">复制微信号</button>
+        </div>
     </div>
+
+    <script>
+        // ===== 核心功能 =====
+        function copyWechatId() {
+            const text = 'kf12345';
+            navigator.clipboard.writeText(text)
+                .then(() => showToast('✓ 已复制到剪贴板'))
+                .catch(() => showToast('⚠ 请手动复制'));
+        }
+
+        // ===== 媒体加载处理 =====
+        function handleMediaError(img) {
+            console.error('媒体加载失败:', img.src);
+            img.style.display = 'none';
+            document.getElementById('media-error').style.display = 'block';
+            
+            // 尝试回退到CDN
+            if(!img.src.includes('cdn')) {
+                img.src = 'https://cdn.example.com/wechat-qr.png';
+                img.style.display = 'block';
+            }
+        }
+
+        // ===== 交互反馈 =====
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.9);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 30px;
+                font-size: 14px;
+                z-index: 1000;
+                animation: toast-fade 2s;
+            `;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        // ===== 移动端检测 =====
+        function isMobile() {
+            return /Mobi|Android|iPhone/i.test(navigator.userAgent);
+        }
+
+        // ===== 初始化检查 =====
+        document.addEventListener('DOMContentLoaded', () => {
+            if(isMobile()) {
+                // 移动端特殊处理
+                document.documentElement.style.setProperty('--qr-size', '280px');
+                console.log('运行在移动端环境');
+            }
+        });
+    </script>
+
+    <style>
+        /* 动态CSS变量 */
+        :root {
+            --qr-size: 300px;
+        }
+        
+        .qr-code {
+            max-width: var(--qr-size);
+        }
+
+        @keyframes toast-fade {
+            0% { opacity: 0; transform: translate(-50%, 10px); }
+            20% { opacity: 1; transform: translate(-50%, 0); }
+            80% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -10px); }
+        }
+    </style>
 </body>
 </html>
