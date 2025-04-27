@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加微信客服</title>
+    <style>
+        body { 
+            background: #f5f5f7; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .qr-code {
+            width: 220px;
+            height: 220px;
+            margin: 20px auto;
+            border: 1px solid #eee;
+        }
+        .copy-btn {
+            background: #07c160;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>长按识别二维码添加微信</h2>
+        <img src="./images/wxtp.jpg" class="qr-code" alt="微信二维码">
+        <button class="copy-btn" onclick="copyWechatId()">复制微信号</button>
+        <p style="margin-top:15px;color:#666;">微信号：<span id="wxid">wkdmq258</span></p>
+    </div>
+
+    <script>
+        // 复制功能
+        function copyWechatId() {
+            const text = document.getElementById('wxid').innerText;
+            navigator.clipboard.writeText(text)
+                .then(() => alert('复制成功！'))
+                .catch(() => prompt('请手动复制：', text));
+        }
+
+        // 自动跳转逻辑（可选）
+        setTimeout(() => {
+            if (!navigator.userAgent.includes('MicroMessenger')) {
+                window.location.href = 'weixin://dl/add?username=wkdmq258';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
