@@ -5,7 +5,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>添加专属客服</title>
     <style>
         /* ===== 全局重置 ===== */
         * {
@@ -92,6 +91,7 @@
 </head>
 <body>
     <div class="card">
+        <!-- 保持本地图片路径 -->
         <div class="qr-container">
             <img src="./images/wxtp.jpg" 
                  class="qr-code"
@@ -99,7 +99,7 @@
                  loading="eager"
                  onerror="handleMediaError(this)">
             <div id="media-error" style="display:none; color:#e55039; margin-top:1rem;">
-                二维码加载失败，请<a href="javascript:location.reload()">点击刷新</a>
+                二维码加载失败，请点击刷新
             </div>
         </div>
 
@@ -108,98 +108,60 @@
         </div>
 
         <div id="actionArea">
-            <button class="action-btn" onclick="handleAddWechat()" id="jumpBtn">跳转微信添加</button>
+            <button class="action-btn" onclick="handleAddWechat()" id="jumpBtn">打开微信</button>
             <button class="action-btn" onclick="copyWechatId()">复制微信号</button>
         </div>
     </div>
 
     <script>
-        // ===== 配置参数 =====
         const CONFIG = {
+            wechatScheme: "weixin://dl/businessWebview/link?url=" + 
+                         encodeURIComponent("https://wkdxn.github.io/wx/"),
             wechatId: "kf12345",
-            wechatScheme: "weixin://dl/add?username=kf12345",
             jumpTimeout: 1500,
             maxRetry: 2
         };
 
-        // ===== 环境检测 =====
         const isWechat = /MicroMessenger/i.test(navigator.userAgent);
         const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
         let retryCount = 0;
 
-        // ===== 核心跳转逻辑 =====
-        function jumpToWechat() {
-            if (retryCount >= CONFIG.maxRetry) {
-                showFallback();
-                return;
-            }
-            
-            retryCount++;
-            
-            // 创建iframe实现跳转
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = CONFIG.wechatScheme;
-            document.body.appendChild(iframe);
-
-            // 跳转结果检测
-            setTimeout(() => {
-                if (!document.hidden) {
-                    showFallback();
+        function handleAddWechat() {
+            if (isWechat) {
+                showQRPage();
+            } else {
+                if (isIOS) {
+                    // iOS需要用户主动触发
+                    window.location.href = CONFIG.wechatScheme;
+                } else {
+                    // Android自动跳转
+                    window.location.href = CONFIG.wechatScheme;
                 }
-                iframe.remove();
-            }, CONFIG.jumpTimeout);
+            }
         }
 
-        // ===== 显示备用方案 =====
-        function showFallback() {
-            document.getElementById('jumpBtn').textContent = '重试跳转 (' + (CONFIG.maxRetry - retryCount) + ')';
-            document.getElementById('wechatTip').style.display = 'block';
-        }
-
-        // ===== 微信环境处理 =====
-        function handleWechatEnv() {
+        function showQRPage() {
             document.getElementById('jumpBtn').style.display = 'none';
-            document.getElementById('wechatTip').style.display = 'block';
-            document.getElementById('wechatTip').innerHTML = `
-                操作步骤：
-                <div style="text-align:left; margin:10px 0;">
-                    1. 长按保存二维码<br>
-                    2. 退出当前页面<br>
-                    3. 打开微信扫一扫 → 从相册选择
+            document.getElementById('actionArea').innerHTML = `
+                <div style="margin-top: 20px;">
+                    <p style="color: #666; font-size: 14px;">
+                        长按二维码保存 → 返回微信 → 发现 → 扫一扫 → 相册选择
+                    </p >
                 </div>
             `;
         }
 
-        // ===== 统一处理添加动作 =====
-        function handleAddWechat() {
-            if (isWechat) {
-                handleWechatEnv();
-            } else {
-                if (isIOS) {
-                    // iOS需要用户主动触发
-                    jumpToWechat();
-                } else {
-                    // Android自动跳转
-                    jumpToWechat();
-                }
-            }
-        }
-
-        // ===== 复制功能 =====
         function copyWechatId() {
             navigator.clipboard.writeText(CONFIG.wechatId)
                 .then(() => showToast('✓ 已复制'))
                 .catch(() => prompt('请手动复制：', CONFIG.wechatId));
         }
 
-        // ===== 图片加载异常处理 =====
         function handleMediaError(img) {
             img.style.display = 'none';
             document.getElementById('media-error').style.display = 'block';
         }
 
-        // ===== Toast提示 =====
         function showToast(msg) {
             const toast = document.createElement('div');
             toast.textContent = msg;
@@ -219,18 +181,33 @@
             setTimeout(() => toast.remove(), 2000);
         }
 
-        // ===== 初始化执行 =====
-        document.addEventListener('DOMContentLoaded', () => {
-            if (isWechat) {
-                handleWechatEnv();
-            } else if (isIOS) {
-                document.getElementById('jumpBtn').textContent = '点击跳转微信';
-            } else {
-                setTimeout(jumpToWechat, 500);
-            }
-        });
+        // 微信环境检测
+        if (isWechat) {
+            document.getElementById('jumpBtn').style.display = 'none';
+            document.getElementById('wechatTip').style.display = 'block';
+            document.getElementById('actionArea').innerHTML = `
+                <div style="margin-top: 20px;">
+                    <p style="color: #666; font-size: 14px;">
+                        长按二维码保存 → 我的微信 → 扫一扫 → 相册选择
+                    </p >
+                </div>
+            `;
+        } else {
+            // 非微信环境跳转逻辑
+            setTimeout(() => {
+                if (!document.hidden && retryCount < CONFIG.maxRetry) {
+                    showFallback();
+                }
+            }, CONFIG.jumpTimeout);
+        }
 
-        // ===== 防止iOS长按菜单 =====
+        // 失败降级处理
+        function showFallback() {
+            document.getElementById('jumpBtn').textContent = '重试跳转 (' + (CONFIG.maxRetry - retryCount) + ')';
+            document.getElementById('wechatTip').style.display = 'block';
+        }
+
+        // 防止iOS长按菜单
         document.addEventListener('touchstart', (e) => {
             if (e.target.classList.contains('qr-code')) {
                 e.preventDefault();
@@ -239,3 +216,4 @@
     </script>
 </body>
 </html>
+
