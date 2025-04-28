@@ -4,8 +4,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>添加专属客服</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信好友添加</title>
     <style>
         /* ===== 全局重置 ===== */
         * {
@@ -15,193 +15,204 @@
         }
 
         body {
-            background: #f5f5f7;
+            background: #f0f2f5;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-family: -apple-system, system-ui, sans-serif;
             padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
-        /* ===== 卡片容器 ===== */
-        .card {
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            max-width: 500px;
+        /* ===== 容器样式 ===== */
+        .container {
+            max-width: 600px;
             width: 100%;
-            padding: 2rem;
             text-align: center;
+            animation: fadeIn 0.5s ease;
         }
 
-        /* ===== 二维码区域 ===== */
-        .qr-container {
-            margin: 2rem 0;
-            min-height: 300px; /* 防止内容折叠 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        /* ===== 二维码卡片 ===== */
+        .qr-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+            margin: 0 auto;
         }
 
-        .qr-code {
+        /* ===== 二维码图片 ===== */
+        .qr-image {
             width: 100%;
             max-width: 300px;
             height: auto;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            margin: 1.5rem 0;
+            border-radius: 12px;
+            -webkit-touch-callout: none;
         }
 
-        /* ===== 移动端优化 ===== */
+        /* ===== 操作指引 ===== */
+        .guide-text {
+            color: #666;
+            font-size: 0.95rem;
+            margin: 1.5rem 0;
+            line-height: 1.6;
+        }
+
+        /* ===== 微信环境提示 ===== */
+        .wechat-tip {
+            color: #e55039;
+            padding: 1rem;
+            border-radius: 8px;
+            background: #ffeeed;
+            margin: 1rem 0;
+        }
+
+        /* ===== 响应式设计 ===== */
         @media (max-width: 480px) {
-            .card {
+            .qr-card {
                 padding: 1.5rem;
                 border-radius: 16px;
             }
-            
-            .qr-code {
+            .qr-image {
                 max-width: 280px;
             }
-
-            /* 移动端加载动画 */
-            .qr-code.loaded {
-                animation: qr-appear 0.5s ease-out;
-            }
         }
 
-        @keyframes qr-appear {
-            from { transform: scale(0.95); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        /* ===== 信息区域 ===== */
-        .info-group {
-            margin-top: 2rem;
-        }
-
-        .wechat-id {
-            color: #2d2d2d;
-            font-size: 1.2rem;
-            font-weight: 500;
-            margin-bottom: 1.5rem;
-            word-break: break-all;
-        }
-
-        .copy-btn {
-            background: #07c160;
-            color: white;
-            border: none;
-            padding: 0.9rem 2.5rem;
-            border-radius: 30px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: filter 0.3s ease;
-        }
-
-        .copy-btn:hover {
-            filter: brightness(0.95);
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>添加专属客服</h1>
-        
-        <div class="qr-container">
-            <!-- 强制缓存清除 & 备用CDN方案 -->
-            <img src="./images/wxtp.jpg" 
-                 class="qr-code"
-                 alt="微信客服二维码"
-                 loading="eager"
-                 onload="this.classList.add('loaded');this.style.opacity=1"
-                 onerror="handleMediaError(this)">
-            <div id="media-error" style="display:none; color:#e55039; margin-top:1rem;">
-                二维码加载失败，请<a href="javascript:location.reload()">点击刷新</a>或直接搜索微信号
+    <div class="container">
+        <div class="qr-card">
+            <!-- 微信环境提示 -->
+            <div class="wechat-tip" id="wechatTip" style="display:none;">
+                请长按二维码保存后，在微信中使用扫一扫功能
             </div>
-        </div>
 
-        <div class="info-group">
-            <div class="wechat-id">微信号：wkdmq258</div>
-            <button class="copy-btn" onclick="copyWechatId()">复制微信号</button>
+            <!-- 二维码显示区域 -->
+            <h1>添加微信好友</h1>
+            <img src="./images/wxtp.jpg" 
+                 class="qr-image"
+                 alt="微信二维码"
+                 loading="eager"
+                 oncontextmenu="return false"
+                 onerror="handleImageError(this)">
+
+            <!-- 操作指引 -->
+            <div class="guide-text" id="actionGuide">
+                <p>正在尝试跳转微信...</p>
+            </div>
         </div>
     </div>
 
     <script>
-        // ===== 核心功能 =====
-        function copyWechatId() {
-            const text = 'wkdmq258';
-            navigator.clipboard.writeText(text)
-                .then(() => showToast('✓ 已复制到剪贴板'))
-                .catch(() => showToast('⚠ 请手动复制'));
-        }
+        // ===== 配置参数 =====
+        const CONFIG = {
+            wechatScheme: 'weixin://dl/add?username=wkdmq258', // 替换真实微信号
+            fallbackDelay: 1500,  // 跳转失败等待时间
+            maxRetry: 2           // 最大重试次数
+        };
 
-        // ===== 媒体加载处理 =====
-        function handleMediaError(img) {
-            console.error('媒体加载失败:', img.src);
-            img.style.display = 'none';
-            document.getElementById('media-error').style.display = 'block';
-            
-            // 尝试回退到CDN
-            if(!img.src.includes('cdn')) {
-                img.src = 'https://cdn.example.com/wechat-qr.png';
-                img.style.display = 'block';
+        // ===== 环境检测 =====
+        const isWechat = /MicroMessenger/i.test(navigator.userAgent);
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        let retryCount = 0;
+
+        // ===== 核心跳转逻辑 =====
+        function redirectToWechat() {
+            if (isWechat) {
+                showWechatTip();
+                return;
             }
+
+            if (retryCount >= CONFIG.maxRetry) {
+                showFallbackGuide();
+                return;
+            }
+
+            retryCount++;
+            
+            // 创建隐藏iframe实现跳转
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = CONFIG.wechatScheme;
+            document.body.appendChild(iframe);
+
+            // 跳转结果检测
+            setTimeout(() => {
+                if (!document.hidden) {
+                    showFallbackGuide();
+                }
+                document.body.removeChild(iframe);
+            }, CONFIG.fallbackDelay);
         }
 
-        // ===== 交互反馈 =====
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.textContent = message;
-            toast.style.cssText = `
-                position: fixed;
-                bottom: 30px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0,0,0,0.9);
-                color: white;
-                padding: 12px 24px;
-                border-radius: 30px;
-                font-size: 14px;
-                z-index: 1000;
-                animation: toast-fade 2s;
+        // ===== 微信环境处理 =====
+        function showWechatTip() {
+            document.getElementById('wechatTip').style.display = 'block';
+            document.getElementById('actionGuide').innerHTML = `
+                <p>操作步骤：</p>
+                <p>1. 长按保存二维码</p>
+                <p>2. 退出当前页面</p>
+                <p>3. 打开微信扫一扫 → 从相册选择</p>
             `;
-            
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
         }
 
-        // ===== 移动端检测 =====
-        function isMobile() {
-            return /Mobi|Android|iPhone/i.test(navigator.userAgent);
+        // ===== 跳转失败处理 =====
+        function showFallbackGuide() {
+            document.getElementById('actionGuide').innerHTML = `
+                <p style="color:#e55039;">跳转失败，请选择：</p>
+                <button onclick="redirectToWechat()" 
+                    style="background:#07c160; color:white; border:none; padding:12px 24px; border-radius:24px; margin:8px; cursor:pointer;">
+                    重试跳转
+                </button>
+                <button onclick="showSaveTip()" 
+                    style="background:#2d3436; color:white; border:none; padding:12px 24px; border-radius:24px; margin:8px; cursor:pointer;">
+                    保存二维码
+                </button>
+            `;
         }
 
-        // ===== 初始化检查 =====
-        document.addEventListener('DOMContentLoaded', () => {
-            if(isMobile()) {
-                // 移动端特殊处理
-                document.documentElement.style.setProperty('--qr-size', '280px');
-                console.log('运行在移动端环境');
+        // ===== 图片异常处理 =====
+        function handleImageError(img) {
+            console.error('二维码加载失败:', img.src);
+            img.style.display = 'none';
+            document.getElementById('wechatTip').style.display = 'block';
+            document.getElementById('wechatTip').innerHTML = '资源加载失败，请刷新页面';
+        }
+
+        // ===== 保存提示 =====
+        function showSaveTip() {
+            alert('请长按二维码图片选择「保存到手机相册」');
+        }
+
+        // ===== 初始化执行 =====
+        if (isWechat) {
+            showWechatTip();
+        } else {
+            // iOS需要用户交互才能跳转
+            if (isIOS) {
+                document.getElementById('actionGuide').innerHTML = `
+                    <button onclick="redirectToWechat()" 
+                        style="background:#07c160; color:white; border:none; padding:12px 36px; border-radius:28px; margin:8px; cursor:pointer;">
+                        点击跳转微信
+                    </button>
+                `;
+            } else {
+                redirectToWechat();
             }
-        });
+        }
+
+        // ===== 防止iOS长按菜单 =====
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.classList.contains('qr-image')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     </script>
-
-    <style>
-        /* 动态CSS变量 */
-        :root {
-            --qr-size: 300px;
-        }
-        
-        .qr-code {
-            max-width: var(--qr-size);
-        }
-
-        @keyframes toast-fade {
-            0% { opacity: 0; transform: translate(-50%, 10px); }
-            20% { opacity: 1; transform: translate(-50%, 0); }
-            80% { opacity: 1; transform: translate(-50%, 0); }
-            100% { opacity: 0; transform: translate(-50%, -10px); }
-        }
-    </style>
 </body>
 </html>
